@@ -1,0 +1,28 @@
+// v0.0 (Prerelease)
+import FileIO
+
+let main = () -> cmd[()] {
+    let possibleValues = FileIO.read("input.txt")!
+    if let yes(values) = possibleValues {
+        let mut old1 = values.split(\n)[0].default("").parseInt() | 0
+        let mut old2 = values.split(\n)[1].default("").parseInt() | 0
+        let mut old3 = values.split(\n)[2].default("").parseInt() | 0
+        let mut count = 0
+        for (value in values.split(\n).subsection(3, values.len())) {
+            if (value.parseInt() | 0) + old2 + old3 > old1 + old2 + old3 {
+                count += 1
+            }
+            
+            old1 = old2
+            old2 = old3
+            old3 = value.parseInt() | 0
+        }
+
+        print(count)
+    }
+    else {
+        print("Input file not found")
+    }
+}
+
+let pub out = main()
