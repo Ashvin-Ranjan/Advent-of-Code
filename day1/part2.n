@@ -4,10 +4,10 @@ import FileIO
 let main = () -> cmd[()] {
     let possibleValues = FileIO.read("input.txt")!
     if let yes(v) = possibleValues {
-        values = v.split(\n)
+        let values = v.split(\n)
         let mut count = 0
         for (i in range(3, values.len(), 1)) {
-            if (values[i].default("").parseInt() | 0) > (values[i].default("")[i - 3] | 0) {
+            if (values[i].default("").parseInt()  | 0) > (values[i - 3].default("").parseInt()  | 0) {
                 count += 1
             }
         }
