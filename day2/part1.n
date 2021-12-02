@@ -1,0 +1,30 @@
+// v0.0 (release)
+import FileIO
+
+let main = () -> cmd[()] {
+    let possibleValues = FileIO.read("input.txt")!
+    if let yes(values) = possibleValues {
+        let mut depth = 0;
+        let mut hpos = 0
+        for (value in values.split(\n)) {
+            if let [instruct, val] = value.split(\{ }) {
+                if instruct == "forward" {
+                    hpos += val.parseInt() | 0
+                } else if instruct == "up" {
+                    depth -= val.parseInt() | 0
+                } else if instruct == "down" {
+                    depth += val.parseInt() | 0
+                }
+            }
+        }
+
+        print("Depth: " + depth.toString())
+        print("HPos: " + hpos.toString())
+        print("Total: " + (depth * hpos).toString())
+    }
+    else {
+        print("Input file not found")
+    }
+}
+
+let pub out = main()
