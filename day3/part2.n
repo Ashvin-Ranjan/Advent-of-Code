@@ -1,0 +1,93 @@
+// v0.0.1 (prerelease)
+import FileIO
+
+let parseBin = (inp: str) -> int {
+    let mut out = 0
+    for (i in range(0, inp.len(), 1)) {
+        if (inp[i] | \{0}) == \{1} {
+            out += (2^(inp.len() - (1 + i))).round()
+        }
+    }
+
+    return out
+}
+
+let main = () -> cmd[()] {
+    let possibleValues = FileIO.read("input.txt")!
+    if let yes(values) = possibleValues {
+        let mut oxy = 0;
+        let mut carb = 0
+        let bits = (values.split(\n)[0] | "").strip().len()
+
+        let mut check = values.split(\n)
+        for (i in range(0, bits, 1)){
+            let mut count1 = 0;
+            let mut out: list[str] = []
+            for (value in check) {
+                if (value[i] | \{0}) == \{1} {
+                    count1 += 1
+                }
+            }
+            if count1 >= check.len() - count1 {
+                for (value in check) {
+                    if (value[i] | \{0}) == \{1} {
+                        out = out.append(value)
+                    }
+                }
+            } else {
+                for (value in check) {
+                    if (value[i] | \{1}) == \{0} {
+                        out = out.append(value)
+                    }
+                }
+            }
+
+            check = out
+            if out.len() == 1 {
+                oxy = parseBin((out[0] | "").strip())
+                break
+            }
+        }
+        
+
+        check = values.split(\n)
+        // Check carbon
+        for (i in range(0, bits, 1)){
+            let mut count1 = 0;
+            let mut out: list[str] = []
+            for (value in check) {
+                if (value[i] | \{0}) == \{1} {
+                    count1 += 1
+                }
+            }
+            if count1 < check.len() - count1 {
+                for (value in check) {
+                    if (value[i] | \{0}) == \{1} {
+                        out = out.append(value)
+                    }
+                }
+            } else {
+                for (value in check) {
+                    if (value[i] | \{1}) == \{0} {
+                        out = out.append(value)
+                    }
+                }
+            }
+
+            check = out
+            if out.len() == 1 {
+                carb = parseBin((out[0] | "").strip())
+                break
+            }
+        }
+
+        print("Oxygen: " + oxy.toString())
+        print("Carbon: " + carb.toString())
+        print("Total: " + (oxy * carb).toString())
+    }
+    else {
+        print("Input file not found")
+    }
+}
+
+let pub out = main()

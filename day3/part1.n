@@ -1,0 +1,34 @@
+// v0.0.1 (prerelease)
+import FileIO
+
+let main = () -> cmd[()] {
+    let possibleValues = FileIO.read("input.txt")!
+    if let yes(values) = possibleValues {
+        let mut gamma = 0;
+        let mut epsilon = 0
+        let bits = ((values.split(\n)[0] | "").len()) - 1
+        for (i in range(0, bits, 1)){
+            let mut count1 = 0;
+            for (value in values.split(\n)) {
+                if (value[i] | \{0}) == \{1} {
+                    count1 += 1
+                }
+            }
+            
+            if count1 > values.split(\n).len() / 2 {
+                gamma += (2^(bits - (1 + i))).round()
+            } else {
+                epsilon += (2^(bits - (1 + i))).round()
+            }
+        }
+
+        print("Gamma: " + gamma.toString())
+        print("Epsilon: " + epsilon.toString())
+        print("Total: " + (gamma * epsilon).toString())
+    }
+    else {
+        print("Input file not found")
+    }
+}
+
+let pub out = main()
