@@ -95,21 +95,24 @@ let main = () -> cmd[()] {
             let mut remainingBoards: list[list[list[str]]] = []
             let mut remainingShadows: list[list[list[bool]]] = []
             for ((i, board) in enumerate(boardShadows, [])) {
+                let mut completed = false
                 for ((j, row) in enumerate(board, [])) {
                     if ((row[0] | false) && (row[1] | false) && (row[2] | false) && (row[3] | false) && (row[4] | false)) || ((board[0][j] | false) && (board[1][j] | false) && (board[2][j] | false) && (board[3][j] | false) && (board[4][j] | false)) {
-                        if boards.len() == 1 {
-                            print(generateBoardScore(input.parseInt() | 0, boards[0] | [], boardShadows[0] | []))
+                        if boardShadows.len() == 1 {
+                            print(generateBoardScore(input.parseInt() | 0, boards[i] | [], board))
                             exit(0)
                         }
-                    } else {
-                        remainingBoards = remainingBoards.append(boards[i] | [])
-                        remainingShadows = remainingShadows.append(board)
+                        completed = true
+                        break
                     }
+                }
+                if ~completed {
+                    remainingBoards = remainingBoards.append(boards[i] | [])
+                    remainingShadows = remainingShadows.append(board)
                 }
             }
             boards = remainingBoards
             boardShadows = remainingShadows
-
             print("Processed Inputs: " + input)
         }
     }
