@@ -1,0 +1,121 @@
+// v0.0.1 (prerelease)
+import FileIO
+
+let enumerate = [t, a] (l: list[t], default: t) -> list[(int, t)] {
+    return range(0, l.len(), 1).filterMap((i: int) -> maybe[(int, t)] {
+        return yes((i, l[i] | default))
+    })
+}
+
+let generateBoardScore = (inp: int, board: list[list[str]], boardShadow: list[list[bool]]) -> int {
+    let mut out = 0
+
+    for ((j, row) in enumerate(boardShadow, [])) {
+        for ((k, item) in enumerate(row, false)) {
+            if ~item {
+                out += board[j][k].default("").parseInt() | 0
+            }
+        }
+    }
+
+    return out * inp
+}
+
+let main = () -> cmd[()] {
+    let possibleValues = FileIO.read("input.txt")!
+    if let yes(values) = possibleValues {
+        // Process values into array
+        let processedValues = values.split(\n).filterMap((v: str) -> maybe[str] {
+            return yes(v.strip())
+        })
+
+        print("Processed values")
+
+        // Parse bingo inputs
+        let inputs = processedValues[0].default("").strip().split(\{,})
+
+        let mut boards: list[list[list[str]]] = []
+
+        // Parse bingo boards
+        let mut currentBoard: list[list[str]] = []
+        for (i in processedValues.subsection(2, processedValues.len())) {
+            if i == "" {
+                boards = boards.append(currentBoard)
+                // Needed for generic weirdness
+                let empty: list[list[str]] = []
+                currentBoard = empty
+                continue
+            }
+
+            // Add row to current board but ignore double spaces
+            currentBoard = currentBoard.append(i.split(\{ }).filterMap((v: str) -> maybe[str] {
+                return if v == "" { none } else { yes(v) }
+            }))
+        }
+        boards = boards.append(currentBoard)
+
+        print("Parsed boards")
+
+        // Create shadows of the board with all falses
+        let mut boardShadows = boards.filterMap((board: list[list[str]]) -> maybe[list[list[bool]]] {
+            return yes(board.filterMap((row: list[str]) -> maybe[list[bool]] {
+                return yes(row.filterMap((_: str) -> maybe[bool] {
+                    return yes(false)
+                }))
+            }))
+        })
+        
+        print("Created shadows")
+
+        for (input in inputs) {
+            // Check for inputs
+            for ((i, board) in enumerate(boards, [])) {
+                for ((j, row) in enumerate(board, [])) {
+                    for ((k, item) in enumerate(row, "")) {
+                        if input.strip() == item.strip() {
+                            boardShadows = [
+                                ..boardShadows.subsection(0, i),
+                                [
+                                    ..(boardShadows[i] | []).subsection(0, j),
+                                    [
+                                        ..(boardShadows[i][j] | []).subsection(0, k),
+                                        true,
+                                        ..(boardShadows[i][j] | []).subsection(k + 1, (boardShadows[i][j] | []).len()),
+                                    ],
+                                    ..(boardShadows[i] | []).subsection(j + 1, (boardShadows[i] | []).len()),
+                                ],
+                                ..boardShadows.subsection(i + 1, boardShadows.len())
+                            ]
+                        }
+                    }
+                }
+            }
+
+            // Check for matches
+            let mut remainingBoards: list[list[list[str]]] = []
+            let mut remainingShadows: list[list[list[bool]]] = []
+            for ((i, board) in enumerate(boardShadows, [])) {
+                for ((j, row) in enumerate(board, [])) {
+                    if ((row[0] | false) && (row[1] | false) && (row[2] | false) && (row[3] | false) && (row[4] | false)) || ((board[0][j] | false) && (board[1][j] | false) && (board[2][j] | false) && (board[3][j] | false) && (board[4][j] | false)) {
+                        if boards.len() == 1 {
+                            print(generateBoardScore(input.parseInt() | 0, boards[0] | [], boardShadows[0] | []))
+                            exit(0)
+                        }
+                    } else {
+                        remainingBoards = remainingBoards.append(boards[i] | [])
+                        remainingShadows = remainingShadows.append(board)
+                    }
+                }
+            }
+            boards = remainingBoards
+            boardShadows = remainingShadows
+
+            print("Processed Inputs: " + input)
+        }
+    }
+    else {
+        print("Input file not found")
+    }
+}
+
+let pub out = main()
