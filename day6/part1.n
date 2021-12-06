@@ -1,0 +1,83 @@
+// v0.0.1 (prerelease)
+import FileIO
+
+let enumerate = [t, a] (l: list[t], default: t) -> list[(int, t)] {
+    return range(0, l.len(), 1).filterMap((i: int) -> maybe[(int, t)] {
+        return yes((i, l[i] | default))
+    })
+}
+
+let main = () -> cmd[()] {
+    let possibleValues = FileIO.read("input.txt")!
+    if let yes(values) = possibleValues {
+        // Process values into array
+        let mut initialFish = values.strip().split(\{,}).filterMap((v: str) -> maybe[int] {
+            return v.parseInt()
+        })
+
+        let mut iniFish = [
+            (0, 0),
+            (1, 0),
+            (2, 0),
+            (3, 0),
+            (4, 0),
+            (5, 0),
+            (6, 0),
+            (7, 0),
+            (8, 0),
+        ]
+
+        for (f in initialFish) {
+            let (_, fi) = iniFish[f] | (0, 0)
+            iniFish = [
+                ..iniFish.subsection(0, f),
+                (f, fi + 1),
+                ..iniFish.subsection(f + 1, iniFish.len()),
+            ]
+        }
+
+        let mut fishes = mapFrom(iniFish)
+
+        print(fishes)
+
+        let days = 256
+
+        for (i in range(0, days, 1)) {
+            print("Processing day: " + i.toString())
+            let mut endFish = fishes |> entries
+            let (_, toSpawn) = endFish[0] | (0, 0)
+            for ((age, f) in (fishes |> entries).subsection(1, endFish.len())) {
+                endFish = [
+                    ..endFish.subsection(0, age - 1),
+                    (age - 1, f),
+                    (age, 0),
+                    ..endFish.subsection(age + 1, endFish.len()),
+                ]
+            }
+
+            let (_, f6) = (endFish[6] | (0, 0))
+            let (_, f8) = (endFish[8] | (0, 0))
+            endFish = [
+                ..endFish.subsection(0, 6),
+                (6, toSpawn + f6),
+                ..endFish.subsection(7, 8),
+                (8, toSpawn + f8),
+            ]
+
+            fishes = mapFrom(endFish)
+        }
+
+        let mut fish = 0
+
+        
+        for ((_, f) in (fishes |> entries)) {
+            fish += f
+        }
+        print(fish)
+    }
+    else {
+        print("Input file not found")
+    }
+}
+
+let pub out = main()
