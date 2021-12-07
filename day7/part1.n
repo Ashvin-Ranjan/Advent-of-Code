@@ -1,0 +1,55 @@
+// v0.0.1 (prerelease)
+import FileIO
+
+let abs = (i: int) -> int {
+    if i < 0 {
+        return -i
+    }
+    return i
+}
+
+
+let enumerate = [t, a] (l: list[t], default: t) -> list[(int, t)] {
+    return range(0, l.len(), 1).filterMap((i: int) -> maybe[(int, t)] {
+        return yes((i, l[i] | default))
+    })
+}
+
+let main = () -> cmd[()] {
+    let possibleValues = FileIO.read("input.txt")!
+    if let yes(values) = possibleValues {
+        // Process values into array
+        let mut crabValues = values.strip().split(\{,}).filterMap((v: str) -> maybe[int] {
+            return v.parseInt()
+        })
+
+
+        let mut maxDist = 0;
+        for (crab in crabValues) {
+            maxDist = if maxDist < crab { crab } else { maxDist }
+        }
+
+        let mut min = maxDist * maxDist + 10
+
+        for (i in range(0, maxDist + 1, 1)) {
+            let mut sum = 0
+            for (crab in crabValues) {
+                sum += abs(crab - i)
+            }
+
+            if sum < min {
+                min = sum
+            }
+            print(i.toString() + "/" + maxDist.toString())
+        }
+
+        print("Found fuel")
+
+        print(min)
+    }
+    else {
+        print("Input file not found")
+    }
+}
+
+let pub out = main()
