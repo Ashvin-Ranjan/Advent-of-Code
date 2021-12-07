@@ -34,7 +34,7 @@ let main = () -> cmd[()] {
         for (i in range(0, maxDist + 1, 1)) {
             let mut sum = 0
             for (crab in crabValues) {
-                sum += abs(crab - i)
+                sum += (abs(crab - avg) * (abs(crab - avg) + 1))/2
             }
 
             if sum < min {
