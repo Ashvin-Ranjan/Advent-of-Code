@@ -1,0 +1,109 @@
+// v0.0.1 (prerelease)
+import FileIO
+
+let abs = (i: int) -> int {
+    if i < 0 {
+        return -i
+    }
+    return i
+}
+
+
+let enumerate = [t, a] (l: list[t], default: t) -> list[(int, t)] {
+    return range(0, l.len(), 1).filterMap((i: int) -> maybe[(int, t)] {
+        return yes((i, l[i] | default))
+    })
+}
+
+let main = () -> cmd[()] {
+    let possibleValues = FileIO.read("input.txt")!
+    if let yes(values) = possibleValues {
+        // Process values into array
+        let mut heightValues = values.strip().split(\n).filterMap((v: str) -> maybe[list[int]] {
+            return yes(range(0, v.strip().len(), 1).filterMap((i: int) -> maybe[int] {
+                return ((v.strip()[i] | \{ }) + "").parseInt()
+            }))
+        })
+
+        let mut basins: list[(int, list[(int, int)])] = []
+
+        for ((i, row) in enumerate(heightValues, [])) {
+            for ((j, point) in enumerate(row, 9)) {
+                if point ~= 9 {
+                    let mut isValence = false
+                    let mut newBasins: list[(int, list[(int, int)])] = []
+                    for ((k, (count, valence)) in enumerate(basins, (0, []))) {
+                        if (i, j) in valence {
+                            isValence = true
+                            let mut newValance = valence.filterMap((v: (int, int)) -> maybe[(int, int)] {
+                                let (y, x) = v
+                                return if y == i && x == j { none } else { yes(v) }
+                            })
+
+                            for (vale in [
+                                (i, j + 1),
+                                (i + 1, j),
+                                if (heightValues[i + 1][j] | 9) ~= 9 && j - 1 >= 0 && (heightValues[i + 1][j - 1] | 9) ~= 9 { (i + 1, j - 1) } else { (-1 , -1) },
+                            ].filterMap((v: (int, int)) -> maybe[(int, int)] {
+                                let (y, x) = v
+                                return if y < 0 || x < 0 { none } else { 
+                                    if (heightValues[y][x] | 9) == 9 {
+                                        none
+                                    } else {
+                                        yes(v)
+                                    }
+                                }
+                            })) {
+                                newValance = newValance.append(vale)
+                            }
+                            newBasins = newBasins.append((count + 1, newValance))
+                        } else {
+                            newBasins = newBasins.append((count, valence))
+                        }
+                    }
+
+                    basins = newBasins
+
+                    if ~isValence {
+                        basins = basins.append((1, [
+                            (i, j + 1),
+                            (i + 1, j),
+                            if (heightValues[i + 1][j] | 9) ~= 9 && j - 1 >= 0 && (heightValues[i + 1][j - 1] | 9) ~= 9 { (i + 1, j - 1) } else { (-1 , -1) },
+                        ].filterMap((v: (int, int)) -> maybe[(int, int)] {
+                            let (y, x) = v
+                            return if y < 0 || x < 0 { none } else { 
+                                if (heightValues[y][x] | 9) == 9 {
+                                    none
+                                } else {
+                                    yes(v)
+                                }
+                            }
+                        })))
+                    }
+                }
+            }
+            print(i)
+        }
+
+        let mut tops = (0, 0, 0)
+
+        for ((count, _) in basins) {
+            let (low, mid, high) = tops
+            if count > high {
+                tops = (mid, high, count)
+            } else if count > mid {
+                tops = (mid, count, high)
+            } else if count > low {
+                tops = (count, mid, high)
+            }
+        }
+
+        let (low, mid, high) = tops
+        print(low * mid * high)
+    }
+    else {
+        print("Input file not found")
+    }
+}
+
+let pub out = main()
