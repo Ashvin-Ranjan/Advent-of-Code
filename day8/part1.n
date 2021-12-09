@@ -1,0 +1,49 @@
+// v0.0.1 (prerelease)
+import FileIO
+
+let abs = (i: int) -> int {
+    if i < 0 {
+        return -i
+    }
+    return i
+}
+
+
+let enumerate = [t, a] (l: list[t], default: t) -> list[(int, t)] {
+    return range(0, l.len(), 1).filterMap((i: int) -> maybe[(int, t)] {
+        return yes((i, l[i] | default))
+    })
+}
+
+let main = () -> cmd[()] {
+    let possibleValues = FileIO.read("input.txt")!
+    if let yes(values) = possibleValues {
+        // Process values into array
+        let mut displayValues = values.strip().split(\n).filterMap((v: str) -> maybe[str] {
+            return v.strip().split(\{|})[1]
+        })
+
+        let mut out = 0
+
+        for (i in range(0, displayValues.len(), 1)) {
+            if let yes(v) = displayValues[i] {
+                for (item in v.strip().split(\{ })) {
+                    out += match (item.len()) {
+                        2 -> 1
+                        3 -> 1
+                        4 -> 1
+                        7 -> 1
+                        _ -> 0
+                    }
+                }
+            }
+        }
+
+        print(out)
+    }
+    else {
+        print("Input file not found")
+    }
+}
+
+let pub out = main()
