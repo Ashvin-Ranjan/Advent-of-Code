@@ -1,0 +1,47 @@
+// v0.0.1 (prerelease)
+import FileIO
+
+let abs = (i: int) -> int {
+    if i < 0 {
+        return -i
+    }
+    return i
+}
+
+
+let enumerate = [t, a] (l: list[t], default: t) -> list[(int, t)] {
+    return range(0, l.len(), 1).filterMap((i: int) -> maybe[(int, t)] {
+        return yes((i, l[i] | default))
+    })
+}
+
+let main = () -> cmd[()] {
+    let possibleValues = FileIO.read("input.txt")!
+    if let yes(values) = possibleValues {
+        // Process values into array
+        let mut heightValues = values.strip().split(\n).filterMap((v: str) -> maybe[list[int]] {
+            return yes(range(0, v.strip().len(), 1).filterMap((i: int) -> maybe[int] {
+                return ((v.strip()[i] | \{ }) + "").parseInt()
+            }))
+        })
+
+        let mut risk = 0
+
+        for ((i, row) in enumerate(heightValues, [])) {
+            for ((j, point) in enumerate(row, 11)) {
+                let left = if j - 1 < 0 { none } else { heightValues[i][j - 1] }
+                let up = if i - 1 < 0 { none } else { heightValues[i - 1][j] }
+                if point < (left | 10) && point < (heightValues[i][j + 1] | 10) && point < (up | 10) && point < (heightValues[i + 1][j] | 10) {
+                    risk += point + 1
+                }
+            }
+        }
+
+        print(risk)
+    }
+    else {
+        print("Input file not found")
+    }
+}
+
+let pub out = main()
