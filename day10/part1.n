@@ -1,0 +1,69 @@
+// v0.0.1 (prerelease)
+import FileIO
+
+let abs = (i: int) -> int {
+    if i < 0 {
+        return -i
+    }
+    return i
+}
+
+
+let enumerate = [t, a] (l: list[t], default: t) -> list[(int, t)] {
+    return range(0, l.len(), 1).filterMap((i: int) -> maybe[(int, t)] {
+        return yes((i, l[i] | default))
+    })
+}
+
+let main = () -> cmd[()] {
+    let possibleValues = FileIO.read("input.txt")!
+    if let yes(values) = possibleValues {
+        // Process values into array
+        let mut lines = values.strip().split(\n).filterMap((v: str) -> maybe[str] {
+            return yes(v.strip())
+        })
+
+        let mut score = 0
+
+        let open = [\{(}, \{[}, \{{}, \{<}]
+        let close = [\{)}, \{]}, \{}}, \{>}]
+
+        for (line in lines) {
+            let mut stack: list[char] = []
+            let mut e = false
+            for (i in range(0, line.len(), 1)) {
+                if let yes(c) = line[i] {
+                    if c in open {
+                        stack = stack.append(c)
+                    } else {
+                        if c == \{)} && (stack[-1] | \{ }) == \{(} {
+                            stack = stack.subsection(0, -1)
+                        } else if c == \{]} && (stack[-1] | \{ }) == \{[} {
+                            stack = stack.subsection(0, -1)
+                        } else if c == \{}} && (stack[-1] | \{ }) == \{{} {
+                            stack = stack.subsection(0, -1)
+                        } else if c == \{>} && (stack[-1] | \{ }) == \{<} {
+                            stack = stack.subsection(0, -1)
+                        } else {
+                            print(c)
+                            score += match (c) {
+                                \{)} -> 3
+                                \{]} -> 57
+                                \{}} -> 1197
+                                _ -> 25137
+                            }
+                            break
+                        }
+                    }
+                }
+            }
+        }
+
+        print(score)
+    }
+    else {
+        print("Input file not found")
+    }
+}
+
+let pub out = main()

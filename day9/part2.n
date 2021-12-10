@@ -25,69 +25,70 @@ let main = () -> cmd[()] {
             }))
         })
 
-        let mut basins: list[(int, list[(int, int)])] = []
+        let mut basins: list[int] = []
+
+        let mut pointsChecked: list[(int, int)] = []
 
         for ((i, row) in enumerate(heightValues, [])) {
             for ((j, point) in enumerate(row, 9)) {
-                if point ~= 9 {
-                    let mut isValence = false
-                    let mut newBasins: list[(int, list[(int, int)])] = []
-                    for ((k, (count, valence)) in enumerate(basins, (0, []))) {
-                        if (i, j) in valence {
-                            isValence = true
-                            let mut newValance = valence.filterMap((v: (int, int)) -> maybe[(int, int)] {
-                                let (y, x) = v
-                                return if y == i && x == j { none } else { yes(v) }
-                            })
-
-                            for (vale in [
-                                (i, j + 1),
-                                (i + 1, j),
-                                if (heightValues[i + 1][j] | 9) ~= 9 && j - 1 >= 0 && (heightValues[i + 1][j - 1] | 9) ~= 9 { (i + 1, j - 1) } else { (-1 , -1) },
-                            ].filterMap((v: (int, int)) -> maybe[(int, int)] {
-                                let (y, x) = v
-                                return if y < 0 || x < 0 { none } else { 
-                                    if (heightValues[y][x] | 9) == 9 {
-                                        none
-                                    } else {
-                                        yes(v)
-                                    }
-                                }
-                            })) {
-                                newValance = newValance.append(vale)
-                            }
-                            newBasins = newBasins.append((count + 1, newValance))
+                if ~((i, j) in pointsChecked) && point ~= 9 {
+                    let mut newBasin = 1
+                    let mut toCheck = [
+                        (i + 1, j),
+                        (i - 1, j),
+                        (i, j + 1),
+                        (i, j - 1),
+                    ].filterMap(((y, x): (int, int)) -> maybe[(int, int)] {
+                        return if x < 0 || y < 0 || (heightValues[y][x] | 9) == 9 || (y, x) in pointsChecked {
+                            none
                         } else {
-                            newBasins = newBasins.append((count, valence))
+                            yes((y, x))
                         }
-                    }
+                    })
 
-                    basins = newBasins
+                    //print(((i, j), toCheck))
 
-                    if ~isValence {
-                        basins = basins.append((1, [
-                            (i, j + 1),
-                            (i + 1, j),
-                            if (heightValues[i + 1][j] | 9) ~= 9 && j - 1 >= 0 && (heightValues[i + 1][j - 1] | 9) ~= 9 { (i + 1, j - 1) } else { (-1 , -1) },
-                        ].filterMap((v: (int, int)) -> maybe[(int, int)] {
-                            let (y, x) = v
-                            return if y < 0 || x < 0 { none } else { 
-                                if (heightValues[y][x] | 9) == 9 {
+                    pointsChecked = pointsChecked.append((i, j))
+                    
+                    while (toCheck.len() ~= 0) {
+                        if let yes(check) = toCheck[0] {
+                            let (y, x) = check
+                            for (p in [
+                                (y + 1, x),
+                                (y - 1, x),
+                                (y, x + 1),
+                                (y, x - 1),
+                            ].filterMap(((y1, x1): (int, int)) -> maybe[(int, int)] {
+                                return if x1 < 0 || y1 < 0 || (heightValues[y1][x1] | 9) == 9 || (y1, x1) in pointsChecked || (y == y1 && x == x1) {
                                     none
                                 } else {
-                                    yes(v)
+                                    yes((y1, x1))
                                 }
+                            })) {
+                                toCheck = toCheck.append(p)
                             }
-                        })))
+
+                            toCheck = toCheck.filterMap(((y1, x1): (int, int)) -> maybe[(int, int)] {
+                                return if (y1, x1) in pointsChecked || (y == y1 && x == x1) {
+                                    none
+                                } else {
+                                    yes((y1, x1))
+                                }
+                            })
+
+                            pointsChecked = pointsChecked.append(check)
+                            newBasin += 1
+                        }
                     }
+                    basins = basins.append(newBasin)
+                    print(basins.len())
                 }
             }
-            print(i)
         }
 
         let mut tops = (0, 0, 0)
 
-        for ((count, _) in basins) {
+        for (count in basins) {
             let (low, mid, high) = tops
             if count > high {
                 tops = (mid, high, count)
@@ -100,6 +101,8 @@ let main = () -> cmd[()] {
 
         let (low, mid, high) = tops
         print(low * mid * high)
+        print((low, mid, high))
+        print(basins)
     }
     else {
         print("Input file not found")
