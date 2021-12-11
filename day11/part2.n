@@ -1,0 +1,133 @@
+// v0.0.1 (prerelease)
+import FileIO
+
+let abs = (i: int) -> int {
+    if i < 0 {
+        return -i
+    }
+    return i
+}
+
+
+let enumerate = [t, a] (l: list[t], default: t) -> list[(int, t)] {
+    return range(0, l.len(), 1).filterMap((i: int) -> maybe[(int, t)] {
+        return yes((i, l[i] | default))
+    })
+}
+
+let main = () -> cmd[()] {
+    let possibleValues = FileIO.read("input.txt")!
+    if let yes(values) = possibleValues {
+        // Process values into array
+        let mut octoValues = values.strip().split(\n).filterMap((v: str) -> maybe[list[int]] {
+            return yes(range(0, v.strip().len(), 1).filterMap((i: int) -> maybe[int] {
+                return ((v.strip()[i] | \{ }) + "").parseInt()
+            }))
+        })
+
+        let mut cont = true
+        let mut count = 0
+        while (cont) {
+            let mut flashed: list[(int, int)] = []
+            let mut toIncrement: list[(int, int)] = []
+            let mut newOcto: list[list[int]] = []
+            for ((i, row) in enumerate(octoValues, [])) {
+                let mut newRow: list[int] = []
+                for ((j, point) in enumerate(row, 0)) {
+                    if point + 1 > 9 {
+                        flashed = flashed.append((i, j))
+                        for (val in [
+                            (i - 1, j - 1),
+                            (i - 1, j),
+                            (i - 1, j + 1),
+                            (i, j - 1),
+                            (i, j + 1),
+                            (i + 1, j - 1),
+                            (i + 1, j),
+                            (i + 1, j + 1),
+                        ].filterMap(((y, x): (int, int)) -> maybe[(int, int)] {
+                            return if y < 0 || x < 0 || (y, x) in flashed {
+                                none
+                            } else {
+                                yes((y, x))
+                            }
+                        })) {
+                            toIncrement = toIncrement.append(val)
+                        }
+                    }
+                    newRow = newRow.append(point + 1)
+                }
+                newOcto = newOcto.append(newRow)
+            }
+
+            octoValues = newOcto
+
+            while (toIncrement.len() > 0) {
+                if let yes(coord) = toIncrement[0] {
+                    let (y, x) = coord
+                    if let yes(point) = octoValues[y][x] {
+                        if point + 1 == 10 && ~((y, x) in flashed) {
+                            flashed = flashed.append((y, x))
+                            for (val in [
+                                (y - 1, x - 1),
+                                (y - 1, x),
+                                (y - 1, x + 1),
+                                (y, x - 1),
+                                (y, x + 1),
+                                (y + 1, x - 1),
+                                (y + 1, x),
+                                (y + 1, x + 1),
+                            ].filterMap(((y1, x1): (int, int)) -> maybe[(int, int)] {
+                                return if y1 < 0 || x1 < 0 || (y1, x1) in flashed {
+                                    none
+                                } else {
+                                    yes((y1, x1))
+                                }
+                            })) {
+                                toIncrement = toIncrement.append(val)
+                            }
+                        } else {
+                            octoValues = [
+                                ..octoValues.subsection(0, y),
+                                [
+                                    ..(octoValues[y] | []).subsection(0, x),
+                                    point + 1,
+                                    ..(octoValues[y] | []).subsection(x + 1, (octoValues[y] | []).len()),
+                                ],
+                                ..octoValues.subsection(y + 1, octoValues.len()),
+                            ]
+                        }
+                    }
+                }
+                toIncrement = toIncrement.subsection(1, toIncrement.len())
+            }
+
+            for ((y, x) in flashed) {
+                octoValues = [
+                    ..octoValues.subsection(0, y),
+                    [
+                        ..(octoValues[y] | []).subsection(0, x),
+                        0,
+                        ..(octoValues[y] | []).subsection(x + 1, (octoValues[y] | []).len()),
+                    ],
+                    ..octoValues.subsection(y + 1, octoValues.len()),
+                ]
+            }
+
+            if (flashed.len() == octoValues.len() * (octoValues[0] | []).len()) {
+                cont = false
+            }
+
+            print(count)
+            count += 1
+        }
+
+        print(octoValues)
+        print(count)
+    }
+    else {
+        print("Input file not found")
+    }
+}
+
+let pub out = main()
