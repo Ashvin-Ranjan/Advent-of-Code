@@ -1,4 +1,4 @@
-// v0.0.1 (prerelease)
+// v0.0.1
 import FileIO
 
 let abs = (i: int) -> int {
