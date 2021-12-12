@@ -8,6 +8,8 @@ let abs = (i: int) -> int {
     return i
 }
 
+let mut maxPaths = 0
+
 
 let enumerate = [t, a] (l: list[t], default: t) -> list[(int, t)] {
     return range(0, l.len(), 1).filterMap((i: int) -> maybe[(int, t)] {
@@ -16,34 +18,50 @@ let enumerate = [t, a] (l: list[t], default: t) -> list[(int, t)] {
 }
 
 // We be doin a little bit of c++
-let mut traverse = (p: str, links: map[str, list[str]], smallPoints: map[str, int]) -> int {
+let mut traverse = (p: str, links: map[str, list[str]], smallPoints: list[str], force: bool) -> int {
     return 1
 }
 
-traverse = (p: str, links: map[str, list[str]], smallPoints: map[str, int]) -> int {
+traverse = (p: str, links: map[str, list[str]], smallPoints: list[str], force: bool) -> int {
     let mut paths = 0
     for (point in (links[p] | [])) {
-        if p == "start" {
-            print((paths, point))
-        } else {
-            print((p, point, smallPoints))
+        if paths > maxPaths {
+            maxPaths = print(paths)
         }
+        
         if point == "end" {
             paths += 1
             continue
         }
-        if point ~= "start" && (point[0] | \{ }).charCode() > 96 && (point[0] | \{ }).charCode() < 123 && smallPoints[point] == none {
+        let mut usedForce = ~force
+
+        let isBlocked = point ~= "start" && (point[0] | \{ }).charCode() > 96 && (point[0] | \{ }).charCode() < 123 && ~(point in smallPoints)
+        if (
+            (isBlocked && ~force) ||
+            (isBlocked && force && (links[point] | []).filterMap((v: str) -> maybe[str] {
+                return if (v[0] | \{ }).charCode() > 96 && (v[0] | \{ }).charCode() < 123 && ~(v in smallPoints) {
+                    none
+                } else {
+                    yes(v)
+                }
+            }).len() == 0)
+        ){
             continue
+        } else if isBlocked {
+            usedForce = true
         }
-        paths += traverse(point, links, mapFrom((smallPoints |> entries).filterMap(((po, i): (str, int)) -> maybe[(str, int)] {
-            return if point == po && (i - 1) == 0 {
+
+        if p == "start" {
+            print((paths, point))
+        }
+
+        paths += traverse(point, links, smallPoints.filterMap((v: str) -> maybe[str] {
+            return if point == v {
                 none
-            } else if point == po {
-                yes((po, i - 1))
             } else {
-                yes((po, i))
+                yes(v)
             }
-        })))
+        }), ~usedForce)
     }
     return paths
 }
@@ -84,14 +102,10 @@ let main = () -> cmd[()] {
             })
             links = links.append((point, l))
         }
-        
-        // We be doing a bit of filtering
 
         print(links)
         
-        print(traverse("start", mapFrom(links), mapFrom(smallPoints.filterMap((v: str) -> maybe[(str, int)] {
-            return yes((v, 2))
-        }))))
+        print(traverse("start", mapFrom(links), smallPoints, true))
     }
     else {
         print("Input file not found")
