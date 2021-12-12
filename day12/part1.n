@@ -1,0 +1,127 @@
+// v0.0.1
+import FileIO
+
+let abs = (i: int) -> int {
+    if i < 0 {
+        return -i
+    }
+    return i
+}
+
+
+let enumerate = [t, a] (l: list[t], default: t) -> list[(int, t)] {
+    return range(0, l.len(), 1).filterMap((i: int) -> maybe[(int, t)] {
+        return yes((i, l[i] | default))
+    })
+}
+
+// We be doin a little bit of c++
+let mut traverse = (p: str, links: map[str, list[str]], smallPoints: list[str]) -> int {
+    return 1
+}
+
+traverse = (p: str, links: map[str, list[str]], smallPoints: list[str]) -> int {
+    let mut paths = 0
+    for (point in (links[p] | [])) {
+        
+        if point == "end" {
+            paths += 1
+            continue
+        }
+        if point ~= "start" && (point[0] | \{ }).charCode() > 96 && (point[0] | \{ }).charCode() < 123 && ~(point in smallPoints) {
+            continue
+        }
+        paths += traverse(point, links, smallPoints.filterMap((v: str) -> maybe[str] {
+            return if point == v {
+                none
+            } else {
+                yes(v)
+            }
+        }))
+    }
+    return paths
+}
+
+let main = () -> cmd[()] {
+    let possibleValues = FileIO.read("input.txt")!
+    if let yes(values) = possibleValues {
+        let mut points: list[str] = []
+        let mut smallPoints: list[str] = []
+        // Process values into array
+        let _ = values.strip().split(\n).filterMap((v:str) -> maybe[()] {
+            v.strip().split(\{-}).filterMap((val:str) -> maybe[()] {
+                if ~(val in points) && val ~= "end" {
+                    points = points.append(val)
+                    if val ~= "start" && (val[0] | \{ }).charCode() > 96 && (val[0] | \{ }).charCode() < 123 {
+                        smallPoints = smallPoints.append(val)
+                    }
+                }
+                return none
+            })
+            return none
+        })
+
+        let mut links: list[(str, list[str])] = []
+
+        for (point in points) {
+            let mut l: list[str] = []
+            let _ = values.strip().split(\n).filterMap((v:str) -> maybe[()] {
+                if let [beg, end] = v.strip().split(\{-}) {
+                    if point == beg && end ~= "start" {
+                        l = l.append(end)
+                    }
+                    if point == end && beg ~= "start" {
+                        l = l.append(beg)
+                    }
+                }
+                return none
+            })
+            links = links.append((point, l))
+        }
+        
+        // We be doing a bit of filtering
+        let mut newLinks: list[(str, list[str])] = []
+        for ((point, linkPoints) in links) {
+            let mut ignore = false
+            if linkPoints.len() == 1 && (linkPoints[0] | "") in smallPoints {
+                ignore = true
+            }
+
+            if ~ignore {
+                newLinks = newLinks.append((point, linkPoints))
+            }
+        }
+
+        links = newLinks
+
+        let mut remainingPoints = links.filterMap(((point, _): (str, list[str])) -> maybe[str] {
+            return yes(point)
+        })
+
+        remainingPoints = remainingPoints.append("end")
+
+        
+        let mut filterLinks: list[(str, list[str])] = []
+        for ((point, linkPoints) in links) {
+            let mut l: list[str] = []
+            for (p in linkPoints) {
+                if p in remainingPoints {
+                    l = l.append(p)
+                }
+            }
+
+            filterLinks = filterLinks.append((point, l))
+        }
+        
+        links = filterLinks
+
+        print(links)
+        
+        print(traverse("start", mapFrom(links), smallPoints))
+    }
+    else {
+        print("Input file not found")
+    }
+}
+
+let pub out = main()
