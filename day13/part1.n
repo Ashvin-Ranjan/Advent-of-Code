@@ -1,0 +1,77 @@
+// v0.0.1
+import FileIO
+
+let abs = (i: int) -> int {
+    if i < 0 {
+        return -i
+    }
+    return i
+}
+
+let main = () -> cmd[()] {
+    let possibleValues = FileIO.read("input.txt")!
+    if let yes(values) = possibleValues {
+        let mut points: list[str] = []
+        let mut folds: list[str] = []
+        let mut onFolds = false
+
+        for (line in values.split(\n)) {
+            if line.strip() == "" {
+                onFolds = true
+                continue
+            }
+            if ~onFolds {
+                points = points.append(line.strip())
+            } else {
+                folds = folds.append(line.strip())
+            }
+        }
+
+        let mut pointValues = points.filterMap((v: str) -> maybe[(int, int)] {
+            if let [x, y] = v.split(\{,}) {
+                if let yes(xVal) = x.parseInt() {
+                    if let yes(yVal) = y.parseInt() {
+                        return yes((xVal, yVal))
+                    }
+                }
+            }
+            return none
+        })
+
+        let lineValues = folds.filterMap((v: str) -> maybe[(bool, int)] {
+            if let yes(val) = v.split(\{ })[-1] {
+                if let [t, line] = val.split(\{=}) {
+                    if let yes(l) = line.parseInt() {
+                        return yes((t == "x", l))
+                    }
+                }
+            }
+            return none
+        })
+
+        // Hacky because fist question lol
+        for ((isX, val) in lineValues.subsection(0, 1)) {
+            let mut newPoints: list[(int, int)] = []
+            if isX {
+                for ((x, y) in pointValues) {
+                    newPoints = newPoints.append((abs(x - val), y))
+                }
+            }
+
+            let mut reducePoints: list[(int, int)] = []
+            for (point in newPoints) {
+                if ~(point in reducePoints) {
+                    reducePoints = reducePoints.append(point)
+                }
+            }
+            pointValues = reducePoints
+        }
+
+        print(pointValues.len())
+    }
+    else {
+        print("Input file not found")
+    }
+}
+
+let pub out = main()

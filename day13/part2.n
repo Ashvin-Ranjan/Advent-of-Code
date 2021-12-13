@@ -1,0 +1,126 @@
+// v0.0.1
+import FileIO
+
+let abs = (i: int) -> int {
+    if i < 0 {
+        return -i
+    }
+    return i
+}
+
+let main = () -> cmd[()] {
+    let possibleValues = FileIO.read("input.txt")!
+    if let yes(values) = possibleValues {
+        let mut points: list[str] = []
+        let mut folds: list[str] = []
+        let mut onFolds = false
+
+        for (line in values.split(\n)) {
+            if line.strip() == "" {
+                onFolds = true
+                continue
+            }
+            if ~onFolds {
+                points = points.append(line.strip())
+            } else {
+                folds = folds.append(line.strip())
+            }
+        }
+
+        let mut pointValues = points.filterMap((v: str) -> maybe[(int, int)] {
+            if let [x, y] = v.split(\{,}) {
+                if let yes(xVal) = x.parseInt() {
+                    if let yes(yVal) = y.parseInt() {
+                        return yes((xVal, yVal))
+                    }
+                }
+            }
+            return none
+        })
+
+        let lineValues = folds.filterMap((v: str) -> maybe[(bool, int)] {
+            if let yes(val) = v.split(\{ })[-1] {
+                if let [t, line] = val.split(\{=}) {
+                    if let yes(l) = line.parseInt() {
+                        return yes((t == "x", l))
+                    }
+                }
+            }
+            return none
+        })
+
+        let mut maxX = 0
+        let mut maxY = 0
+
+        for ((isX, val) in lineValues) {
+            maxX = 0
+            maxY = 0
+            for ((x, y) in pointValues) {
+                if x > maxX {
+                    maxX = x
+                }
+                if y > maxY {
+                    maxY = y
+                }
+            }
+            if maxX < 80 {
+                for (y in range(0, maxY + 1, 1)) {
+                    for (x in range(0, maxX + 1, 1)) {
+                        if (x, y) in pointValues {
+                            printWithEnd("", "#")
+                        } else {
+                            printWithEnd("", ".")
+                        }
+                    }
+                    print("")
+                }
+                print("")
+            }
+            let mut newPoints: list[(int, int)] = []
+            if isX {
+                for ((x, y) in pointValues) {
+                    newPoints = newPoints.append((abs(x - val) - 1 , y))
+                }
+            } else {
+                for ((x, y) in pointValues) {
+                    newPoints = newPoints.append((x, (-(abs(y - val)) + (maxY - val))))
+                }
+            }
+
+            let mut reducePoints: list[(int, int)] = []
+            for (point in newPoints) {
+                if ~(point in reducePoints) {
+                    reducePoints = reducePoints.append(point)
+                }
+            }
+            pointValues = reducePoints
+        }
+
+        maxX = 0
+        maxY = 0
+        for ((x, y) in pointValues) {
+            if x > maxX {
+                maxX = x
+            }
+            if y > maxY {
+                maxY = y
+            }
+        }
+
+        for (y in range(0, maxY + 1, 1)) {
+            for (x in range(0, maxX + 1, 1)) {
+                if (x, y) in pointValues {
+                    printWithEnd("", "#")
+                } else {
+                    printWithEnd("", ".")
+                }
+            }
+            print("")
+        }
+    }
+    else {
+        print("Input file not found")
+    }
+}
+
+let pub out = main()
