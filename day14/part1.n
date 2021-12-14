@@ -1,0 +1,67 @@
+// v0.0.1
+import FileIO
+
+let set = [k, v] (key: k, value: v, i: map[k, v]) -> map[k, v] {
+    return mapFrom([
+        ..(i |> entries),
+        (key, value)
+    ])
+}
+
+let main = () -> cmd[()] {
+    let possibleValues = FileIO.read("input.txt")!
+    if let yes(values) = possibleValues {
+        let mut poly = values.split(\n)[0].default("").strip()
+
+        let mut template: map[str, char] = mapFrom(values.split(\n).subsection(2, values.split(\n).len()).filterMap((v: str) -> maybe[(str, char)] {
+            if let [case, out] = v.strip().split(\{-}) {
+                return yes((case.strip(), out[-1] | \{ }))
+            }
+            return none
+        }))
+        
+        print(template)
+
+        for (n in range(1, 11, 1)) {
+            let mut newPoly = poly[0].default(\{ }) + ""
+            for (i in range(1, poly.len(), 1)) {
+                if let yes(ins) = getValue(poly.substring(i - 1, i + 1), template) {
+                    newPoly += ins + poly[i].default(\{ })
+                } else {
+                    newPoly += poly[i].default(\{ })
+                }
+            }
+            poly = newPoly
+            print((n, poly.len()))
+        }
+
+        print(poly.len())
+
+        let mut counts: map[char, int] = mapFrom([])
+
+        for (i in range(0, poly.len(), 1)) {
+            counts = set(poly[i] | \{ }, ((counts |> getValue(poly[i] | \{ })) | 0) + 1, counts)
+        }
+
+        print(counts)
+
+        let mut max = 0
+        let mut min = poly.len()
+
+        for ((_, v) in (counts |> entries)) {
+            if v > max {
+                max = v
+            }
+            if min > v {
+                min = v
+            }
+        }
+
+        print(max - min)
+    }
+    else {
+        print("Input file not found")
+    }
+}
+
+let pub out = main()
