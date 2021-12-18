@@ -1,0 +1,95 @@
+// v0.0.1
+import FileIO
+
+let join = [t] (l1: list[t], l2: list[t]) -> list[t] {
+    let mut out = l1
+
+    for (i in l2) {
+        out = out.append(i)
+    }
+
+    return out
+}
+
+let main = () -> cmd[()] {
+    let possibleValues = FileIO.read("input.txt")!
+    if let yes(values) = possibleValues {
+        // Process values into array
+        let dangerValues = values.strip().split(\n).filterMap((v: str) -> maybe[list[int]] {
+            return yes(range(0, v.strip().len(), 1).filterMap((i: int) -> maybe[int] {
+                return ((v.strip()[i] | \{ }) + "").parseInt()
+            }))
+        })
+
+        let mut riskCounts = range(0, dangerValues.len(), 1).filterMap((_: int) -> maybe[list[int]] {
+            return yes(range(0, dangerValues.len(), 1).filterMap((_: int) -> maybe[int] {
+                return yes(0)
+            }))
+        })
+
+        for (i in range(1, dangerValues.len(), 1)) {
+            for (((y1, x1), (y2, x2)) in join(
+                range(0, i, 1).filterMap((j: int) -> maybe[((int, int), (int, int))] {
+                    return yes(((j, i - (j + 1)), (j, i - j)))
+                }),
+                range(1, i + 1, 1).filterMap((j: int) -> maybe[((int, int), (int, int))] {
+                    return yes(((j - 1, i - j), (j, i - j)))
+                })
+            )) {
+                if (riskCounts[y2][x2] | 99999) < (dangerValues[y2][x2] | 0) + (riskCounts[y1][x1] | 0) || (riskCounts[y2][x2] | 0) == 0 {
+                    riskCounts = [
+                        ..riskCounts.subsection(0, y2),
+                        [
+                            ..(riskCounts[y2] | []).subsection(0, x2),
+                            (dangerValues[y2][x2] | 0) + (riskCounts[y1][x1] | 0),
+                            ..(riskCounts[y2] | []).subsection(x2 + 1, (riskCounts[y2] | []).len()),
+                        ],
+                        ..riskCounts.subsection(y2 + 1, riskCounts.len()),
+                    ]
+                }
+            }
+
+            print(riskCounts)
+        }
+
+        for (i in range(dangerValues.len(), (dangerValues.len() * 2), 1)) {
+            print(join(
+                range((dangerValues.len() * 2) - 1, i - 1, -1).filterMap((j: int) -> maybe[((int, int), (int, int))] {
+                    return yes(((j, i - (j + 1)), (j, i - j)))
+                }),
+                range((dangerValues.len() * 2), i, -1).filterMap((j: int) -> maybe[((int, int), (int, int))] {
+                    return yes(((j - 1, i - j), (j, i - j)))
+                })
+            ))
+            for (((y1, x1), (y2, x2)) in join(
+                range((dangerValues.len() * 2) - 1, i - 1, -1).filterMap((j: int) -> maybe[((int, int), (int, int))] {
+                    return yes(((j, i - (j + 1)), (j, i - j)))
+                }),
+                range((dangerValues.len() * 2), i, -1).filterMap((j: int) -> maybe[((int, int), (int, int))] {
+                    return yes(((j - 1, i - j), (j, i - j)))
+                })
+            )) {
+                if (riskCounts[y2][x2] | 99999) < (dangerValues[y2][x2] | 0) + (riskCounts[y1][x1] | 0) || (riskCounts[y2][x2] | 0) == 0 {
+                    riskCounts = [
+                        ..riskCounts.subsection(0, y2),
+                        [
+                            ..(riskCounts[y2] | []).subsection(0, x2),
+                            (dangerValues[y2][x2] | 0) + (riskCounts[y1][x1] | 0),
+                            ..(riskCounts[y2] | []).subsection(x2 + 1, (riskCounts[y2] | []).len()),
+                        ],
+                        ..riskCounts.subsection(y2 + 1, riskCounts.len()),
+                    ]
+                }
+            }
+
+            print(riskCounts)
+        }
+
+        print(riskCounts)
+    }
+    else {
+        print("Input file not found")
+    }
+}
+
+let pub out = main()
