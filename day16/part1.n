@@ -1,0 +1,85 @@
+// v0.0.1
+import FileIO
+
+let parseBin = (bin: str) -> int {
+    let mut out = 0
+
+    for (i in range(0, bin.len(), 1)) {
+        out += (((bin[i] | \{ }) + "").parseInt() | 0) << (bin.len() - (i + 1))
+    }
+
+    return out
+}
+
+let mut maxOut = 0
+
+let mut parseSubpacket = (b: str) -> (int, str) {
+    return (0, "")
+}
+
+parseSubpacket = (b: str) -> (int, str) {
+    let mut bin = b
+    let mut out = bin.substring(0, 3) |> parseBin
+
+    bin = bin.substring(3, bin.len())
+    let t = bin.substring(0, 3) |> parseBin
+
+    bin = bin.substring(3, bin.len())
+
+    if t == 4 {
+        while ((bin[0] | \{0}) == \{1}) {
+            bin = bin.substring(5, bin.len())
+        }
+        return (out, bin.substring(5, bin.len()))
+    }
+
+    let length = if parseBin((bin[0] | \{0}) + "") == 0 { 15 } else { 11 }
+    let subpacketsNumber = bin.substring(1, length + 1) |> parseBin
+    bin = bin.substring(length + 1, bin.len())
+
+    for (_ in range(0, subpacketsNumber, 1)) {
+        if out > maxOut {
+            print(out)
+            maxOut = out
+        }
+        let (o, s) = parseSubpacket(bin)
+        out += o
+        bin = s
+    }
+
+    return (out, bin.substring(length, bin.len()))
+}
+
+let main = () -> cmd[()] {
+    let possibleValues = FileIO.read("input.txt")!
+    if let yes(values) = possibleValues {
+        let mut bin = ""
+        for (i in range(0, values.len(), 1)) {
+            bin += match ((values[i] | \{ })) {
+                \{0} -> "0000"
+                \{1} -> "0001"
+                \{2} -> "0010"
+                \{3} -> "0011"
+                \{4} -> "0100"
+                \{5} -> "0101"
+                \{6} -> "0110"
+                \{7} -> "0111"
+                \{8} -> "1000"
+                \{9} -> "1001"
+                \{A} -> "1010"
+                \{B} -> "1011"
+                \{C} -> "1100"
+                \{D} -> "1101"
+                \{E} -> "1110"
+                _ -> "1111"
+            }
+        }
+
+        print(parseSubpacket(bin))
+    }
+    else {
+        print("Input file not found")
+    }
+}
+
+let pub out = main()
